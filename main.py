@@ -34,6 +34,7 @@ def main():
         choice = input("Выберите пункт: ")
 
         if choice == "1":
+            add_book()
             print("Добавление книги")
         elif choice == "2":
             print("Список книг")
@@ -48,6 +49,39 @@ def main():
             break
         else:
             print("Неверный ввод")
+
+
+def add_book():
+    books = load_books()
+
+    author = input("Автор: ")
+    title = input("Название: ")
+
+    for book in books:
+        if (
+            book["author"].lower() == author.lower()
+            and book["title"].lower() == title.lower()
+        ):
+            print("Такая книга уже существует")
+            return
+
+    while True:
+        try:
+            rating = int(input("Оценка (1-5): "))
+            if 1 <= rating <= 5:
+                break
+            print("Введите число от 1 до 5")
+        except ValueError:
+            print("Введите число")
+
+    date = input("Дата прочтения: ")
+
+    new_book = {"author": author, "title": title, "rating": rating, "date": date}
+
+    books.append(new_book)
+    save_books(books)
+
+    print("Книга добавлена")
 
 
 if name == "main":
