@@ -84,5 +84,74 @@ def add_book():
     print("Книга добавлена")
 
 
+def show_books():
+    books = load_books()
+
+    if not books:
+        print("Список пуст")
+        return
+
+    for index, book in enumerate(books, start=1):
+        print(
+            f"{index}. "
+            f"{book['author']} - "
+            f"{book['title']} | "
+            f"Оценка: {book['rating']} | "
+            f"Дата: {book['date']}"
+        )
+
+
+def average_rating():
+    books = load_books()
+
+    if not books:
+        print("Нет книг")
+        return
+
+    avg = sum(book["rating"] for book in books) / len(books)
+
+    print(f"Средняя оценка: {avg:.2f}")
+
+
+def author_stats():
+    books = load_books()
+
+    stats = {}
+
+    for book in books:
+        author = book["author"]
+        stats[author] = stats.get(author, 0) + 1
+
+    for author, count in stats.items():
+        print(f"{author}: {count} книг")
+
+
+def delete_book():
+    books = load_books()
+
+    if not books:
+        print("Список пуст")
+        return
+
+    show_books()
+
+    try:
+        index = int(input("Введите номер книги: ")) - 1
+
+        if 0 <= index < len(books):
+            deleted = books.pop(index)
+            save_books(books)
+
+            print(f"Удалена книга: {deleted['title']}")
+        else:
+            print("Неверный номер")
+
+    except ValueError:
+        print("Введите число")
+
+
+print("Тест")
+
+
 if name == "main":
     main()
