@@ -1,62 +1,30 @@
 import json
-import os
+from collections import Counter
 
-FILE_NAME = "books.json"
+BOOKS_FILE = "books.json"
 
 
+# Загрузка книг
 def load_books():
-    if not os.path.exists(FILE_NAME):
+    try:
+        with open(BOOKS_FILE, "r", encoding="utf-8") as file:
+            return json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
         return []
 
-    with open(FILE_NAME, "r", encoding="utf-8") as file:
-        return json.load(file)
 
-
+# Сохранение книг
 def save_books(books):
-    with open(FILE_NAME, "w", encoding="utf-8") as file:
+    with open(BOOKS_FILE, "w", encoding="utf-8") as file:
         json.dump(books, file, ensure_ascii=False, indent=4)
 
 
-def show_menu():
-    print("\n=== Трекер книг ===")
-    print("1. Добавить книгу")
-    print("2. Показать все книги")
-    print("3. Показать среднюю оценку")
-    print("4. Статистика по авторам")
-    print("5. Удалить книгу")
-    print("6. Выход")
+# Добавление книги
+def add_book(books):
+    author = input("Введите автора: ")
+    title = input("Введите название книги: ")
 
-
-def main():
-    while True:
-        show_menu()
-
-        choice = input("Выберите пункт: ")
-
-        if choice == "1":
-            add_book()
-            print("Добавление книги")
-        elif choice == "2":
-            print("Список книг")
-        elif choice == "3":
-            print("Средняя оценка")
-        elif choice == "4":
-            print("Статистика")
-        elif choice == "5":
-            print("Удаление")
-        elif choice == "6":
-            print("Выход...")
-            break
-        else:
-            print("Неверный ввод")
-
-
-def add_book():
-    books = load_books()
-
-    author = input("Автор: ")
-    title = input("Название: ")
-
+    # Проверка дубликатов
     for book in books:
         if (
             book["author"].lower() == author.lower()
@@ -67,16 +35,24 @@ def add_book():
 
     while True:
         try:
-            rating = int(input("Оценка (1-5): "))
+            rating = int(input("Введите оценку (1-5): "))
+
             if 1 <= rating <= 5:
                 break
-            print("Введите число от 1 до 5")
+
+            print("Оценка должна быть от 1 до 5")
+
         except ValueError:
             print("Введите число")
 
-    date = input("Дата прочтения: ")
+    read_date = input("Введите дату прочтения: ")
 
-    new_book = {"author": author, "title": title, "rating": rating, "date": date}
+    new_book = {
+        "author": author,
+        "title": title,
+        "rating": rating,
+        "date": read_date
+    }
 
     books.append(new_book)
     save_books(books)
@@ -84,65 +60,62 @@ def add_book():
     print("Книга добавлена")
 
 
-def show_books():
-    books = load_books()
-
+# Показ всех книг
+def show_books(books):
     if not books:
-        print("Список пуст")
+        print("Список книг пуст")
         return
 
     for index, book in enumerate(books, start=1):
         print(
             f"{index}. "
-            f"{book['author']} - "
-            f"{book['title']} | "
+            f"{book['author']} — {book['title']} | "
             f"Оценка: {book['rating']} | "
             f"Дата: {book['date']}"
         )
 
 
-def average_rating():
-    books = load_books()
-
+# Средняя оценка
+def average_rating(books):
     if not books:
-        print("Нет книг")
+        print("Нет данных для расчёта")
         return
 
     avg = sum(book["rating"] for book in books) / len(books)
-
     print(f"Средняя оценка: {avg:.2f}")
 
 
-def author_stats():
-    books = load_books()
+# Статистика по авторам
+def author_statistics(books):
+    if not books:
+        print("Список книг пуст")
+        return
 
-    stats = {}
+    authors = Counter(book["author"] for book in books)
 
-    for book in books:
-        author = book["author"]
-        stats[author] = stats.get(author, 0) + 1
+    print("Статистика по авторам:")
 
-    for author, count in stats.items():
+    for author, count in authors.items():
         print(f"{author}: {count} книг")
 
 
-def delete_book():
-    books = load_books()
-
+# Удаление книги
+def delete_book(books):
     if not books:
-        print("Список пуст")
+        print("Список книг пуст")
         return
 
-    show_books()
+    show_books(books)
 
     try:
-        index = int(input("Введите номер книги: ")) - 1
+        index = int(input("Введите номер книги для удаления: ")) - 1
 
         if 0 <= index < len(books):
-            deleted = books.pop(index)
+            removed = books.pop(index)
             save_books(books)
 
-            print(f"Удалена книга: {deleted['title']}")
+            print(f"Удалена книга: {removed['title']}")
+
         else:
             print("Неверный номер")
 
@@ -150,8 +123,43 @@ def delete_book():
         print("Введите число")
 
 
-print("Тест")
+# Главное меню
+def main():
+    books = load_books()
+
+    while True:
+        print("\nТрекер прочитанных книг")
+        print("1. Добавить книгу")
+        print("2. Показать все книги")
+        print("3. Показать среднюю оценку")
+        print("4. Статистика по авторам")
+        print("5. Удалить книгу")
+        print("6. Выход")
+
+        choice = input("Выберите пункт меню: ")
+
+        if choice == "1":
+            add_book(books)
+
+        elif choice == "2":
+            show_books(books)
+
+        elif choice == "3":
+            average_rating(books)
+
+        elif choice == "4":
+            author_statistics(books)
+
+        elif choice == "5":
+            delete_book(books)
+
+        elif choice == "6":
+            print("Выход из программы")
+            break
+
+        else:
+            print("Неверный пункт меню")
 
 
-if name == "main":
+if __name__ == "__main__":
     main()
